@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スマブラ風ゲーム</title>
+    <title>スマブラ風円の操作</title>
     <style>
         * {
             margin: 0;
@@ -28,111 +28,163 @@
             font-size: 24px;
             color: red;
             font-weight: bold;
+            z-index: 10;
         }
 
-        .health-display {
+        .shield {
             position: absolute;
-            font-size: 24px;
-            color: green;
-            font-weight: bold;
-            top: 10px;
-            left: 10px;
+            border-radius: 50%;
+            border: 5px solid rgba(255, 255, 255, 0.5);
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
     <div id="damageDisplay" class="damage-display"></div>
-    <div id="healthDisplay" class="health-display">体力: 100</div>
+    <div id="shieldDisplay" class="shield"></div>
 
     <script>
-        // Canvas要素の取得
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // 画面のサイズに合わせてCanvasを設定
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // プレイヤーの初期設定
         let player = {
-            x: canvas.width / 2,
-            y: canvas.height - 60,
-            radius: 20,
-            color: "blue", // キャラクターの色
-            speed: 5,
-            dx: 0,
-            dy: 0,
-            jumpSpeed: -10,
-            gravity: 0.5,
-            grounded: false,
-            isSmashing: false,
-            smashDamage: 0,
-            smashingTime: 0,
-            health: 100 // 体力の初期値
-        };
-
-        // 敵の初期設定（動かない）
-        let enemy = {
-            x: canvas.width / 2 - 150,
+            x: canvas.width / 2 - 100,
             y: canvas.height - 60,
             radius: 20,
             color: "red",
-            health: 100 // 敵の体力
+            speed: 5,
+            dx: 0,
+            dy: 0,
+            jumpSpeed: -12,
+            gravity: 0.5,
+            grounded: false,
+            isAttacking: false,
+            isSmashing: false,
+            smashDamage: 0,
+            smashingTime: 0,
+            facingRight: true,
+            shieldActive: false,
+            shieldRadius: 30,
+            isDashing: false,
+            dashSpeed: 10
         };
 
-        // ステージの地面の設定
+        let player2 = {
+            x: canvas.width / 2 + 100,
+            y: canvas.height - 60,
+            radius: 20,
+            color: "blue",
+            speed: 5,
+            dx: 0,
+            dy: 0,
+            jumpSpeed: -12,
+            gravity: 0.5,
+            grounded: false,
+            isAttacking: false,
+            isSmashing: false,
+            smashDamage: 0,
+            smashingTime: 0,
+            facingRight: true,
+            shieldActive: false,
+            shieldRadius: 30,
+            isDashing: false,
+            dashSpeed: 10
+        };
+
         let groundHeight = 50;
         let groundY = canvas.height - groundHeight;
 
-        // キー押下イベント
         let keys = {
             up: false,
             down: false,
             left: false,
             right: false,
-            smash: false
+            smash: false,
+            shield: false,
+            dash: false,
+            up2: false,
+            down2: false,
+            left2: false,
+            right2: false,
+            smash2: false,
+            shield2: false,
+            dash2: false
         };
 
-        // キーの入力状態を監視
         window.addEventListener('keydown', (e) => {
+            // プレイヤー1のキー
             if (e.key === "ArrowUp") keys.up = true;
             if (e.key === "ArrowDown") keys.down = true;
             if (e.key === "ArrowLeft") keys.left = true;
             if (e.key === "ArrowRight") keys.right = true;
-            if (e.key === "z") keys.smash = true; // Zキーでスマッシュ攻撃開始
-            if (e.key === " ") keys.up = true; // Spaceでジャンプ
+            if (e.key === "z") keys.smash = true;
+            if (e.key === "Shift") keys.dash = true;
+            if (e.key === "Control") keys.shield = true;
+
+            // プレイヤー2のキー
+            if (e.key === "w") keys.up2 = true;
+            if (e.key === "s") keys.down2 = true;
+            if (e.key === "a") keys.left2 = true;
+            if (e.key === "d") keys.right2 = true;
+            if (e.key === "x") keys.smash2 = true;
+            if (e.key === " ") keys.up2 = true;
+            if (e.key === "f") keys.dash2 = true;
+            if (e.key === "g") keys.shield2 = true;
         });
 
         window.addEventListener('keyup', (e) => {
+            // プレイヤー1のキー
             if (e.key === "ArrowUp") keys.up = false;
             if (e.key === "ArrowDown") keys.down = false;
             if (e.key === "ArrowLeft") keys.left = false;
             if (e.key === "ArrowRight") keys.right = false;
-            if (e.key === "z") keys.smash = false; // Zキーでスマッシュ攻撃終了
-            if (e.key === " ") keys.up = false; // ジャンプ停止
+            if (e.key === "z") keys.smash = false;
+            if (e.key === "Shift") keys.dash = false;
+            if (e.key === "Control") keys.shield = false;
+
+            // プレイヤー2のキー
+            if (e.key === "w") keys.up2 = false;
+            if (e.key === "s") keys.down2 = false;
+            if (e.key === "a") keys.left2 = false;
+            if (e.key === "d") keys.right2 = false;
+            if (e.key === "x") keys.smash2 = false;
+            if (e.key === " ") keys.up2 = false;
+            if (e.key === "f") keys.dash2 = false;
+            if (e.key === "g") keys.shield2 = false;
         });
 
-        // プレイヤーの更新
-        function updatePlayer() {
-            // 移動の設定
+        function updatePlayer(player, keys) {
             if (keys.left) player.dx = -player.speed;
             else if (keys.right) player.dx = player.speed;
             else player.dx = 0;
 
-            // スマッシュ攻撃の溜め時間を計測
+            if (keys.dash) player.isDashing = true;
+            else player.isDashing = false;
+
+            if (keys.up && player.grounded) {
+                player.dy = player.jumpSpeed;
+            }
+
             if (keys.smash) {
                 player.smashingTime++;
             } else {
                 if (player.smashingTime > 0) {
-                    // スマッシュ攻撃のダメージを計算
-                    player.smashDamage = Math.min(player.smashingTime, 100); // ダメージは最大100
-                    displayDamage(player.smashDamage); // ダメージを表示
-                    player.smashingTime = 0; // 溜め時間リセット
+                    player.smashDamage = Math.min(player.smashingTime * 2, 100);
+                    displayDamage(player.smashDamage, player);
+                    player.smashingTime = 0;
                 }
             }
 
-            // 重力
+            if (keys.shield) {
+                player.shieldActive = true;
+            } else {
+                player.shieldActive = false;
+            }
+
             if (player.y < groundY - player.radius) {
                 player.dy += player.gravity;
                 player.grounded = false;
@@ -142,44 +194,14 @@
                 player.grounded = true;
             }
 
-            // ジャンプ
-            if (keys.up && player.grounded) {
-                player.dy = player.jumpSpeed;
-            }
-
-            // プレイヤーを移動
             player.x += player.dx;
             player.y += player.dy;
 
-            // 画面外に出ないように制限
             if (player.x < player.radius) player.x = player.radius;
             if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
         }
 
-        // 敵の更新
-        function updateEnemy() {
-            // 敵の体力が0以下の場合、敵を消す（簡易的なゲームオーバー処理）
-            if (enemy.health <= 0) {
-                enemy.color = "gray"; // 敵が倒されたら色を変える
-            }
-        }
-
-        // ダメージを画面に表示
-        function displayDamage(damage) {
-            const damageDisplay = document.getElementById("damageDisplay");
-            damageDisplay.textContent = `スマッシュダメージ: ${damage}`;
-            damageDisplay.style.left = `${player.x - 50}px`;
-            damageDisplay.style.top = `${player.y - 30}px`;
-        }
-
-        // 体力を画面に表示
-        function displayHealth() {
-            const healthDisplay = document.getElementById("healthDisplay");
-            healthDisplay.textContent = `体力: ${player.health}`;
-        }
-
-        // プレイヤーを描画
-        function drawPlayer() {
+        function drawPlayer(player) {
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
             ctx.fillStyle = player.color;
@@ -187,43 +209,62 @@
             ctx.closePath();
         }
 
-        // 敵を描画
-        function drawEnemy() {
-            ctx.beginPath();
-            ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
-            ctx.fillStyle = enemy.color;
-            ctx.fill();
-            ctx.closePath();
+        function drawShield(player) {
+            if (player.shieldActive) {
+                const shieldDisplay = document.getElementById("shieldDisplay");
+                shieldDisplay.style.left = `${player.x - player.shieldRadius}px`;
+                shieldDisplay.style.top = `${player.y - player.shieldRadius}px`;
+                shieldDisplay.style.width = `${player.shieldRadius * 2}px`;
+                shieldDisplay.style.height = `${player.shieldRadius * 2}px`;
+                shieldDisplay.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+            }
         }
 
-        // ステージの描画
+        function displayDamage(damage, player) {
+            const damageDisplay = document.getElementById("damageDisplay");
+            damageDisplay.textContent = `スマッシュダメージ: ${damage}`;
+            damageDisplay.style.left = `${player.x - 50}px`;
+            damageDisplay.style.top = `${player.y - 30}px`;
+        }
+
         function drawGround() {
             ctx.fillStyle = "#333";
             ctx.fillRect(0, groundY, canvas.width, groundHeight);
         }
 
-        // ゲームループ
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // 画面をクリア
-            drawGround(); // 地面を描画
-            updatePlayer(); // プレイヤーを更新
-            updateEnemy(); // 敵を更新
-            drawPlayer(); // プレイヤーを描画
-            drawEnemy(); // 敵を描画
-            displayHealth(); // 体力を表示
-            requestAnimationFrame(gameLoop); // 次のフレームをリクエスト
+        function drawStage() {
+            ctx.fillStyle = "#8B8B8B";
+            ctx.fillRect(0, groundY, canvas.width, 20);  
+            ctx.fillStyle = "#8B8B8B";
+            ctx.fillRect(0, groundY - 50, canvas.width, 50);  
         }
 
-        // ウィンドウサイズが変更された場合にCanvasを再調整
-        window.addEventListener("resize", () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            groundY = canvas.height - groundHeight;
-            player.x = canvas.width / 2;
-            player.y = groundY - player.radius;
-        });
+        function updateCamera() {
+            const midpointX = (player.x + player2.x) / 2;
+            const midpointY = (player.y + player2.y) / 2;
+            const cameraX = midpointX - canvas.width / 2;
+            const cameraY = midpointY - canvas.height / 2;
+            
+            ctx.setTransform(1, 0, 0, 1, -cameraX, -cameraY);
+        }
 
-        // ゲームループを開始
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            updatePlayer(player, keys);
+            updatePlayer(player2, keys);
+            updateCamera();
+
+            drawStage();
+            drawGround();
+            drawPlayer(player);
+            drawPlayer(player2);
+            drawShield(player);
+            drawShield(player2);
+
+            requestAnimationFrame(gameLoop);
+        }
+
         gameLoop();
     </script>
 </body>
