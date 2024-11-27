@@ -5,8 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>円のスマブラ操作</title>
     <style>
-        body { margin: 0; padding: 0; }
-        canvas { background-color: #eaeaea; display: block; margin: 0 auto; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* スクロールバーを表示しない */
+        }
+
+        canvas {
+            display: block;
+            background-color: #eaeaea;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -17,14 +32,14 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Canvasのサイズを設定
-        canvas.width = 800;
-        canvas.height = 600;
+        // 画面のサイズに合わせてCanvasを設定
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
         // 円の初期位置と設定
         let circle = {
-            x: 400,
-            y: 300,
+            x: canvas.width / 2,
+            y: canvas.height / 2,
             radius: 20,
             color: "red",
             speed: 5,
@@ -93,6 +108,14 @@
             drawCircle();
             requestAnimationFrame(gameLoop); // 次のフレームをリクエスト
         }
+
+        // ウィンドウサイズが変更された場合にCanvasを再調整
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            circle.x = canvas.width / 2;
+            circle.y = canvas.height / 2;
+        });
 
         // ゲームループを開始
         gameLoop();
