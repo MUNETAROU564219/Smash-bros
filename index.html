@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>円のスマブラ操作</title>
+    <style>
+        body { margin: 0; padding: 0; }
+        canvas { background-color: #eaeaea; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // Canvas要素の取得
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Canvasのサイズを設定
+        canvas.width = 800;
+        canvas.height = 600;
+
+        // 円の初期位置と設定
+        let circle = {
+            x: 400,
+            y: 300,
+            radius: 20,
+            color: "red",
+            speed: 5,
+            dx: 0,
+            dy: 0
+        };
+
+        // キー押下イベント
+        let keys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false
+        };
+
+        // キーの入力状態を監視
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowUp") keys.up = true;
+            if (e.key === "ArrowDown") keys.down = true;
+            if (e.key === "ArrowLeft") keys.left = true;
+            if (e.key === "ArrowRight") keys.right = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === "ArrowUp") keys.up = false;
+            if (e.key === "ArrowDown") keys.down = false;
+            if (e.key === "ArrowLeft") keys.left = false;
+            if (e.key === "ArrowRight") keys.right = false;
+        });
+
+        // 円の更新
+        function updateCircle() {
+            // キー入力に応じて移動量を設定
+            if (keys.up) circle.dy = -circle.speed;
+            else if (keys.down) circle.dy = circle.speed;
+            else circle.dy = 0;
+
+            if (keys.left) circle.dx = -circle.speed;
+            else if (keys.right) circle.dx = circle.speed;
+            else circle.dx = 0;
+
+            // 円を移動させる
+            circle.x += circle.dx;
+            circle.y += circle.dy;
+
+            // 画面外に出ないように制限
+            if (circle.x < circle.radius) circle.x = circle.radius;
+            if (circle.x > canvas.width - circle.radius) circle.x = canvas.width - circle.radius;
+            if (circle.y < circle.radius) circle.y = circle.radius;
+            if (circle.y > canvas.height - circle.radius) circle.y = canvas.height - circle.radius;
+        }
+
+        // 描画
+        function drawCircle() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // 画面をクリア
+            ctx.beginPath();
+            ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+            ctx.fillStyle = circle.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        // ゲームループ
+        function gameLoop() {
+            updateCircle();
+            drawCircle();
+            requestAnimationFrame(gameLoop); // 次のフレームをリクエスト
+        }
+
+        // ゲームループを開始
+        gameLoop();
+    </script>
+</body>
+</html>
