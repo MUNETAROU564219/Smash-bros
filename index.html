@@ -36,23 +36,35 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // 円の初期位置と設定
-        let circle = {
+        // プレイヤーの初期設定
+        let player = {
             x: canvas.width / 2,
-            y: canvas.height / 2,
+            y: canvas.height - 60,
             radius: 20,
             color: "red",
             speed: 5,
             dx: 0,
-            dy: 0
+            dy: 0,
+            jumpSpeed: -15, // ジャンプ速度
+            gravity: 0.5,   // 重力
+            grounded: false, // 地面にいるかどうか
+            isSmashing: false, // スマッシュ攻撃中か
         };
+
+        // ステージの地面の設定
+        let groundHeight = 50; // 地面の高さ
+        let groundY = canvas.height - groundHeight;
 
         // キー押下イベント
         let keys = {
             up: false,
             down: false,
             left: false,
-            right: false
+            right: false,
+            smashUp: false,
+            smashDown: false,
+            smashLeft: false,
+            smashRight: false
         };
 
         // キーの入力状態を監視
@@ -61,6 +73,13 @@
             if (e.key === "ArrowDown") keys.down = true;
             if (e.key === "ArrowLeft") keys.left = true;
             if (e.key === "ArrowRight") keys.right = true;
+            if (e.key === "z") {
+                if (keys.left) keys.smashLeft = true;
+                else if (keys.right) keys.smashRight = true;
+                else if (keys.up) keys.smashUp = true;
+                else if (keys.down) keys.smashDown = true;
+            }
+            if (e.key === " ") keys.up = true; // Spaceでジャンプ
         });
 
         window.addEventListener('keyup', (e) => {
@@ -68,44 +87,75 @@
             if (e.key === "ArrowDown") keys.down = false;
             if (e.key === "ArrowLeft") keys.left = false;
             if (e.key === "ArrowRight") keys.right = false;
+            if (e.key === "z") {
+                keys.smashUp = keys.smashDown = keys.smashLeft = keys.smashRight = false;
+            }
+            if (e.key === " ") keys.up = false; // ジャンプ停止
         });
 
         // 円の更新
-        function updateCircle() {
-            // キー入力に応じて移動量を設定
-            if (keys.up) circle.dy = -circle.speed;
-            else if (keys.down) circle.dy = circle.speed;
-            else circle.dy = 0;
+        function updatePlayer() {
+            // 移動の設定
+            if (keys.left) player.dx = -player.speed;
+            else if (keys.right) player.dx = player.speed;
+            else player.dx = 0;
 
-            if (keys.left) circle.dx = -circle.speed;
-            else if (keys.right) circle.dx = circle.speed;
-            else circle.dx = 0;
+            // スマッシュ攻撃
+            if (keys.smashLeft) {
+                player.dx = -player.speed * 2;
+            } else if (keys.smashRight) {
+                player.dx = player.speed * 2;
+            } else if (keys.smashUp) {
+                player.dy = -player.jumpSpeed * 1.5;
+            } else if (keys.smashDown) {
+                player.dy = player.jumpSpeed * 1.5;
+            }
 
-            // 円を移動させる
-            circle.x += circle.dx;
-            circle.y += circle.dy;
+            // 重力
+            if (player.y < groundY - player.radius) {
+                player.dy += player.gravity;
+                player.grounded = false;
+            } else {
+                player.dy = 0;
+                player.y = groundY - player.radius;
+                player.grounded = true;
+            }
+
+            // ジャンプ
+            if (keys.up && player.grounded) {
+                player.dy = player.jumpSpeed;
+            }
+
+            // プレイヤーを移動
+            player.x += player.dx;
+            player.y += player.dy;
 
             // 画面外に出ないように制限
-            if (circle.x < circle.radius) circle.x = circle.radius;
-            if (circle.x > canvas.width - circle.radius) circle.x = canvas.width - circle.radius;
-            if (circle.y < circle.radius) circle.y = circle.radius;
-            if (circle.y > canvas.height - circle.radius) circle.y = canvas.height - circle.radius;
+            if (player.x < player.radius) player.x = player.radius;
+            if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
         }
 
         // 描画
-        function drawCircle() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // 画面をクリア
+        function drawPlayer() {
             ctx.beginPath();
-            ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
-            ctx.fillStyle = circle.color;
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = player.color;
             ctx.fill();
             ctx.closePath();
         }
 
+        // ステージの描画
+        function drawGround() {
+            ctx.fillStyle = "#333";
+            ctx.fillRect(0, groundY, canvas.width, groundHeight);
+        }
+
         // ゲームループ
         function gameLoop() {
-            updateCircle();
-            drawCircle();
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // 画面をクリア
+            drawGround(); // 地面を描画
+            updatePlayer(); // プレイヤーを更新
+            drawPlayer(); // プレイヤーを描画
             requestAnimationFrame(gameLoop); // 次のフレームをリクエスト
         }
 
@@ -113,8 +163,9 @@
         window.addEventListener("resize", () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            circle.x = canvas.width / 2;
-            circle.y = canvas.height / 2;
+            groundY = canvas.height - groundHeight;
+            player.x = canvas.width / 2;
+            player.y = groundY - player.radius;
         });
 
         // ゲームループを開始
