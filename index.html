@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スマブラ風円の操作</title>
+    <title>スマブラ風2D対戦ゲーム</title>
     <style>
         * {
             margin: 0;
@@ -19,8 +19,7 @@
 
         canvas {
             display: block;
-            background-color: #eaeaea;
-            margin: 0 auto;
+            background: linear-gradient(to bottom, #87CEFA, #B0E0E6);
         }
 
         .damage-display {
@@ -28,7 +27,6 @@
             font-size: 24px;
             color: red;
             font-weight: bold;
-            z-index: 10;
         }
 
         .shield {
@@ -51,8 +49,8 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let player = {
-            x: canvas.width / 2 - 100,
+        let player1 = {
+            x: canvas.width / 3,
             y: canvas.height - 60,
             radius: 20,
             color: "red",
@@ -74,11 +72,11 @@
         };
 
         let player2 = {
-            x: canvas.width / 2 + 100,
+            x: canvas.width * 2 / 3,
             y: canvas.height - 60,
             radius: 20,
             color: "blue",
-            speed: 5,
+            speed: 3,
             dx: 0,
             dy: 0,
             jumpSpeed: -12,
@@ -88,7 +86,7 @@
             isSmashing: false,
             smashDamage: 0,
             smashingTime: 0,
-            facingRight: true,
+            facingRight: false,
             shieldActive: false,
             shieldRadius: 30,
             isDashing: false,
@@ -98,63 +96,60 @@
         let groundHeight = 50;
         let groundY = canvas.height - groundHeight;
 
-        let keys = {
+        let keys1 = {
             up: false,
             down: false,
             left: false,
             right: false,
             smash: false,
             shield: false,
-            dash: false,
-            up2: false,
-            down2: false,
-            left2: false,
-            right2: false,
-            smash2: false,
-            shield2: false,
-            dash2: false
+            dash: false
+        };
+
+        let keys2 = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            smash: false,
+            shield: false,
+            dash: false
         };
 
         window.addEventListener('keydown', (e) => {
-            // プレイヤー1のキー
-            if (e.key === "ArrowUp") keys.up = true;
-            if (e.key === "ArrowDown") keys.down = true;
-            if (e.key === "ArrowLeft") keys.left = true;
-            if (e.key === "ArrowRight") keys.right = true;
-            if (e.key === "z") keys.smash = true;
-            if (e.key === "Shift") keys.dash = true;
-            if (e.key === "Control") keys.shield = true;
+            if (e.key === "ArrowUp") keys1.up = true;
+            if (e.key === "ArrowDown") keys1.down = true;
+            if (e.key === "ArrowLeft") keys1.left = true;
+            if (e.key === "ArrowRight") keys1.right = true;
+            if (e.key === "z") keys1.smash = true;
+            if (e.key === " ") keys1.up = true;
+            if (e.key === "Shift") keys1.dash = true;
+            if (e.key === "Control") keys1.shield = true;
 
-            // プレイヤー2のキー
-            if (e.key === "w") keys.up2 = true;
-            if (e.key === "s") keys.down2 = true;
-            if (e.key === "a") keys.left2 = true;
-            if (e.key === "d") keys.right2 = true;
-            if (e.key === "x") keys.smash2 = true;
-            if (e.key === " ") keys.up2 = true;
-            if (e.key === "f") keys.dash2 = true;
-            if (e.key === "g") keys.shield2 = true;
+            if (e.key === "w") keys2.up = true;
+            if (e.key === "s") keys2.down = true;
+            if (e.key === "a") keys2.left = true;
+            if (e.key === "d") keys2.right = true;
+            if (e.key === "Enter") keys2.smash = true;
+            if (e.key === "q") keys2.shield = true;
         });
 
         window.addEventListener('keyup', (e) => {
-            // プレイヤー1のキー
-            if (e.key === "ArrowUp") keys.up = false;
-            if (e.key === "ArrowDown") keys.down = false;
-            if (e.key === "ArrowLeft") keys.left = false;
-            if (e.key === "ArrowRight") keys.right = false;
-            if (e.key === "z") keys.smash = false;
-            if (e.key === "Shift") keys.dash = false;
-            if (e.key === "Control") keys.shield = false;
+            if (e.key === "ArrowUp") keys1.up = false;
+            if (e.key === "ArrowDown") keys1.down = false;
+            if (e.key === "ArrowLeft") keys1.left = false;
+            if (e.key === "ArrowRight") keys1.right = false;
+            if (e.key === "z") keys1.smash = false;
+            if (e.key === " ") keys1.up = false;
+            if (e.key === "Shift") keys1.dash = false;
+            if (e.key === "Control") keys1.shield = false;
 
-            // プレイヤー2のキー
-            if (e.key === "w") keys.up2 = false;
-            if (e.key === "s") keys.down2 = false;
-            if (e.key === "a") keys.left2 = false;
-            if (e.key === "d") keys.right2 = false;
-            if (e.key === "x") keys.smash2 = false;
-            if (e.key === " ") keys.up2 = false;
-            if (e.key === "f") keys.dash2 = false;
-            if (e.key === "g") keys.shield2 = false;
+            if (e.key === "w") keys2.up = false;
+            if (e.key === "s") keys2.down = false;
+            if (e.key === "a") keys2.left = false;
+            if (e.key === "d") keys2.right = false;
+            if (e.key === "Enter") keys2.smash = false;
+            if (e.key === "q") keys2.shield = false;
         });
 
         function updatePlayer(player, keys) {
@@ -232,36 +227,23 @@
             ctx.fillRect(0, groundY, canvas.width, groundHeight);
         }
 
-        function drawStage() {
-            ctx.fillStyle = "#8B8B8B";
-            ctx.fillRect(0, groundY, canvas.width, 20);  
-            ctx.fillStyle = "#8B8B8B";
-            ctx.fillRect(0, groundY - 50, canvas.width, 50);  
-        }
-
-        function updateCamera() {
-            const midpointX = (player.x + player2.x) / 2;
-            const midpointY = (player.y + player2.y) / 2;
-            const cameraX = midpointX - canvas.width / 2;
-            const cameraY = midpointY - canvas.height / 2;
-            
-            ctx.setTransform(1, 0, 0, 1, -cameraX, -cameraY);
+        function adjustCamera() {
+            const midX = (player1.x + player2.x) / 2;
+            const cameraSpeed = 0.1;
+            const cameraTargetX = Math.min(Math.max(midX, canvas.width / 2), canvas.width - canvas.width / 2);
+            const cameraTargetY = Math.min(Math.max(groundY - 60, canvas.height / 2), canvas.height - canvas.height / 2);
         }
 
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            updatePlayer(player, keys);
-            updatePlayer(player2, keys);
-            updateCamera();
-
-            drawStage();
+            updatePlayer(player1, keys1);
+            updatePlayer(player2, keys2);
+            adjustCamera();
             drawGround();
-            drawPlayer(player);
+            drawPlayer(player1);
             drawPlayer(player2);
-            drawShield(player);
+            drawShield(player1);
             drawShield(player2);
-
             requestAnimationFrame(gameLoop);
         }
 
